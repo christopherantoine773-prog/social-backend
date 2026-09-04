@@ -1,15 +1,16 @@
-FROM node:18
+FROM node:18-slim
 
-# Installation de ffmpeg et python3 pour yt-dlp
-RUN apt-get update && apt-get install -y ffmpeg python3 python3-pip && \
-    pip3 install --break-system-packages yt-dlp
+# Installation de ffmpeg et yt-dlp
+RUN apt-get update && apt-get install -y ffmpeg python3 python3-pip curl && \
+    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
+    chmod a+rx /usr/local/bin/yt-dlp
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+# Installation de express et cors directement
+RUN npm init -y && npm install express cors
 
-COPY . .
+COPY server.js .
 
 EXPOSE 3000
 CMD ["node", "server.js"]
