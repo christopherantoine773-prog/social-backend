@@ -18,7 +18,6 @@ app.post('/api/analyze', async (req, res) => {
     }
 
     try {
-        // Nettoyage ultra-précis de l'URL TikTok ou YouTube
         let cleanInput = url.split('?')[0].split('#')[0];
         let username = cleanInput
             .replace(/https?:\/\/(www\.)?(tiktok\.com|youtube\.com|youtu\.be|instagram\.com)\/?/, '')
@@ -27,7 +26,6 @@ app.post('/api/analyze', async (req, res) => {
             .replace(/^user\//, '')
             .split('/')[0];
 
-        // Si le lien contient /v/@username ou /share/user/
         if (cleanInput.includes('/@')) {
             username = cleanInput.split('/@')[1].split('/')[0];
         }
@@ -42,7 +40,6 @@ app.post('/api/analyze', async (req, res) => {
 
         if (platform === "TikTok") {
             try {
-                // Utilisation de l'API publique officielle de scraping de profil TikTok
                 const response = await fetch(`https://tikwm.com/api/user/info?unique_id=${encodeURIComponent(username)}`);
                 const data = await response.json();
                 
@@ -50,24 +47,14 @@ app.post('/api/analyze', async (req, res) => {
                     followers = data.data.stats.followerCount || 0;
                     likes = data.data.stats.heartCount || 0;
                     avatar = data.data.user.avatarMedium || data.data.user.avatarLarger || avatar;
-                } else {
-                    // Second essai alternatif si le premier format échoue
-                    const altRes = await fetch(`https://www.tikwm.com/api/user/info?unique_id=${encodeURIComponent(username)}`);
-                    const altData = await altRes.json();
-                    if (altData.code === 0 && altData.data) {
-                        followers = altData.data.stats.followerCount || 0;
-                        likes = altData.data.stats.heartCount || 0;
-                        avatar = altData.data.user.avatarMedium || avatar;
-                    }
                 }
             } catch (e) {
                 console.log("Erreur API TikTok:", e);
             }
         }
 
-        // Si l'API ne renvoie vraiment rien, on renvoie une erreur explicite au lieu de fausses données inventées
         if (followers === 0 && platform === "TikTok") {
-            return.status(404).json({ error: `Impossible de récupérer les données pour @${username}. Vérifiez le pseudo.` });
+            return res.status(404).json({ error: `Impossible de récupérer les données pour @${username}. Vérifiez le pseudo.` });
         }
 
         const metrics = {
